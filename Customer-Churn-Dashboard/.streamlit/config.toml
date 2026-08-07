@@ -1,0 +1,10 @@
+# Save this file inside .streamlit/config.toml
+[theme]
+primaryColor = "#00D2FF"
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+textColor = "#F8FAFC"
+font = "sans serif"
+
+# This enables the native system theme switcher in the top right menu
+allow_user_switching = true
