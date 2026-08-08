@@ -13,6 +13,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 from prediction import predict_single_customer
 from analytics import render_bi_analytics_tab  # Imported Module 3 engine cleanly
+from email_generator import generate_reengagement_email  # Module 9: Gemini-powered outreach
 
 # Initialize application layout parameters
 st.set_page_config(
@@ -132,6 +133,12 @@ with tab1:
     with row2_col3:
         phone_service = st.selectbox("Active Phone Trunk Service Line", ["Yes", "No"])
         paperless_billing = st.selectbox("Automated Paperless Invoicing", ["Yes", "No"])
+
+    row3_col1, row3_col2 = st.columns(2)
+    with row3_col1:
+        customer_name = st.text_input("Customer Name (used for outreach email)", value="")
+    with row3_col2:
+        customer_email = st.text_input("Customer Email (optional, for reference)", value="")
 
     st.write("<br>", unsafe_allow_html=True)
     
@@ -278,6 +285,29 @@ with tab1:
             )
             fig_shap.update_xaxes(showgrid=True, gridcolor="#334155")
             st.plotly_chart(fig_shap, use_container_width=True)
+
+            # ----------------- MODULE 9: GEMINI RE-ENGAGEMENT EMAIL -----------------
+            if risk_tier == "High Risk":
+                st.write("<br>", unsafe_allow_html=True)
+                st.subheader("✉️ AI-Generated Retention Outreach")
+                st.caption("Uses the SHAP factors above to draft a personalized re-engagement email via the Gemini API.")
+
+                if st.button("Generate Re-engagement Email"):
+                    with st.spinner("Drafting a personalized re-engagement email..."):
+                        try:
+                            top_factors_for_email = list(zip(display_features, display_weights))
+                            email_text = generate_reengagement_email(
+                                customer_name=customer_name if customer_name else "Valued Customer",
+                                risk_probability=risk_probability,
+                                top_factors=top_factors_for_email
+                            )
+                            st.markdown(f"""
+                                <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid #334155; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5; color: #F8FAFC;">
+                                {email_text}
+                                </div>
+                            """, unsafe_allow_html=True)
+                        except Exception as email_error:
+                            st.error(f"Email generation failed: {email_error}")
         except Exception as shap_error:
             st.info("Feature contribution modeling complete.")
 
